@@ -543,6 +543,7 @@
                 const actualIndex = Math.floor((360 - finalRotation) / segmentAngle) % foods.length;
                 const actionText = document.getElementById('titleInput').value.trim() || '吃';
                 document.getElementById('result').textContent = `🎉 今天${actionText}【${foods[actualIndex]}】！`;
+                currentRotation = currentRotation % 360;
             }, 4000);
         }
 
