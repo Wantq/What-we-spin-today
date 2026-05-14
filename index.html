@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>今天吃什么</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Microsoft YaHei', sans-serif;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            font-family: inherit;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            width: 2.5em;
+            text-align: center;
+            border-bottom: 2px dashed rgba(255,255,255,0.5);
+            transition: border-color 0.3s;
+        }
+
+        .title-input:focus {
+            border-color: white;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            position: relative;
+        }
+
+        .wheel canvas {
+            border-radius: 50%;
+            width: 100%;
+            height: 100%;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid #ff4757;
+            z-index: 10;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.3));
+        }
+
+        .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .spin-btn {
+            margin-top: 30px;
+            padding: 15px 50px;
+            font-size: 1.2rem;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .spin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 71, 87, 0.5);
+        }
+
+        .spin-btn:active {
+            transform: translateY(0);
+        }
+
+        .spin-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: white;
+            min-height: 40px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .edit-section {
+            margin-top: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .edit-section h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .edit-section textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .edit-section button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .custom-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .custom-btn:hover {
+            background: #5a6fd6;
+        }
+
+        .count-select {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .count-select select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .option-input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 12px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .save-btn:hover {
+            background: #229954;
+        }
+
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 24px;
+            font-size: 15px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            html {
+                overflow-x: hidden;
+                touch-action: manipulation;
+            }
+            body {
+                min-height: 100dvh;
+                overflow-x: hidden;
+                touch-action: manipulation;
+            }
+            .wheel {
+                will-change: transform;
+                transform: translateZ(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">
+        <span id="titleEmoji">🍽️</span> 今天
+        <input type="text" id="titleInput" class="title-input" value="吃" maxlength="2">
+        什么
+    </h1>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel">
+            <canvas id="wheelCanvas" width="350" height="350"></canvas>
+        </div>
+        <div class="center">🎯</div>
+    </div>
+
+    <button class="spin-btn" id="spinBtn">开始抽奖</button>
+    <div class="result" id="result"></div>
+
+    <div class="edit-section">
+        <button class="custom-btn" onclick="toggleEditPanel()">⚙️ 选项自定义</button>
+        <div class="edit-panel" id="editPanel" style="display: none; margin-top: 15px;">
+            <div class="count-select">
+                <label>扇面数量：</label>
+                <select id="segmentCount" onchange="updateInputFields()">
+                    <option value="2">2个</option>
+                    <option value="3">3个</option>
+                    <option value="4">4个</option>
+                    <option value="5">5个</option>
+                    <option value="6">6个</option>
+                    <option value="7">7个</option>
+                    <option value="8">8个</option>
+                    <option value="9">9个</option>
+                    <option value="10">10个</option>
+                    <option value="11">11个</option>
+                    <option value="12" selected>12个</option>
+                </select>
+            </div>
+            <div id="optionsContainer" style="margin: 15px 0; display: grid; gap: 10px;"></div>
+            <button class="save-btn" onclick="updateWheel()">💾 保存更新转盘</button>
+        </div>
+    </div>
+
+    <script>
+        let toastTimer;
+        function showToast(msg) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'toast';
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            clearTimeout(toastTimer);
+            toast.classList.add('show');
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        const colors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+            '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+            '#BB8FCE', '#85C1E9', '#F8B500', '#00CED1'
+        ];
+
+        let foods = [];
+        let isSpinning = false;
+        let currentRotation = 0;
+        // 预设模板
+        const presets = {
+            '吃': {
+                emoji: '🍽️',
+                options: ['火锅','烧烤','麻辣烫','炒菜','饺子','面条','汉堡','披萨','寿司','炸鸡','盖浇饭','米线']
+            },
+            '玩': {
+                emoji: '🎮',
+                options: ['看电影','去逛街','打游戏','去运动','唱K','剧本杀','宅家睡觉','爬山','去公园','探店','去酒吧','泡温泉']
+            },
+            '喝': {
+                emoji: '🍹',
+                options: ['奶茶','咖啡','可乐','果汁','矿泉水','茶','气泡水','啤酒','红酒','白酒','酸奶','热饮']
+            }
+        };
+
+        // 转动时拦截标题输入框点击
+        document.getElementById('titleInput').addEventListener('mousedown', function(e) {
+            if (isSpinning) {
+                e.preventDefault();
+                showToast('请等待转盘转完哦~');
+            }
+        });
+
+        // 聚焦时：如果是自定义内容就显示提示
+        document.getElementById('titleInput').addEventListener('focus', function() {
+            const val = this.value.trim();
+            if (!presets[val]) {
+                document.getElementById('result').textContent = '✏️ 已切换到自定义模式，请点击「选项自定义」填写内容~';
+            }
+        });
+
+        // 标题输入变化处理
+        document.getElementById('titleInput').addEventListener('input', function() {
+            const val = this.value.trim();
+            const emojiEl = document.getElementById('titleEmoji');
+            const countSelect = document.getElementById('segmentCount');
+
+            // 更新页面标题
+            document.title = `今天${val || '吃'}什么`;
+
+            if (presets[val]) {
+                // 匹配到预设
+                emojiEl.textContent = presets[val].emoji;
+                const presetOpts = presets[val].options;
+                // 设置扇面数为预设长度
+                countSelect.value = presetOpts.length;
+                // 更新输入框
+                updateInputFields();
+                // 填充预设值
+                const inputs = document.querySelectorAll('.option-input');
+                inputs.forEach((input, idx) => {
+                    input.value = presetOpts[idx] || '';
+                });
+                // 更新转盘
+                updateWheel();
+            } else if (val) {
+                // 自定义内容，清空选项
+                emojiEl.textContent = '🎯';
+                const inputs = document.querySelectorAll('.option-input');
+                inputs.forEach(input => input.value = '');
+                foods = [];
+                createWheel();
+                document.getElementById('result').textContent = '✏️ 已切换到自定义模式，请点击「选项自定义」填写内容~';
+            } else {
+                document.getElementById('result').textContent = '✏️ 已切换到自定义模式，请点击「选项自定义」填写内容~';
+            }
+        });
+
+        // 切换编辑面板
+        function toggleEditPanel() {
+            if (isSpinning) { showToast('请等待转盘转完哦~'); return; }
+            const panel = document.getElementById('editPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // 动态生成输入框
+        function updateInputFields() {
+            if (isSpinning) {
+                showToast('请等待转盘转完哦~');
+                document.getElementById('segmentCount').value = foods.length || 12;
+                return;
+            }
+            const count = parseInt(document.getElementById('segmentCount').value);
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < count; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'option-input';
+                input.placeholder = `选项 ${i+1}`;
+                const currentType = document.getElementById('titleInput').value.trim();
+                input.value = presets[currentType]?.options[i] || '';
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const allInputs = document.querySelectorAll('.option-input');
+                        const idx = Array.from(allInputs).indexOf(this);
+                        if (idx < allInputs.length - 1) {
+                            allInputs[idx + 1].focus();
+                        } else {
+                            document.querySelector('.save-btn').focus();
+                        }
+                    }
+                });
+                container.appendChild(input);
+            }
+        }
+
+        function createWheel() {
+            const canvas = document.getElementById('wheelCanvas');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const segmentAngle = (2 * Math.PI) / foods.length;
+
+            foods.forEach((food, index) => {
+                const startAngle = index * segmentAngle - Math.PI / 2;
+                const endAngle = startAngle + segmentAngle;
+
+                // 绘制扇区
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 绘制文字
+                const textAngle = startAngle + segmentAngle / 2;
+                const textRadius = radius * 0.65;
+                const textX = centerX + Math.cos(textAngle) * textRadius;
+                const textY = centerY + Math.sin(textAngle) * textRadius;
+
+                ctx.save();
+                ctx.translate(textX, textY);
+                ctx.rotate(textAngle + Math.PI / 2);
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Microsoft YaHei';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(food, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        function spin() {
+            // 验证标题
+            const titleVal = document.getElementById('titleInput').value.trim();
+            if (!titleVal) {
+                alert('转盘名称不能为空！');
+                return;
+            }
+
+            // 验证选项
+            const optionInputs = document.querySelectorAll('.option-input');
+            const hasInput = Array.from(optionInputs).some(inp => inp.value.trim() !== '');
+            if (foods.length === 0 || !hasInput) {
+                alert('选项不能为空！');
+                return;
+            }
+
+            if (isSpinning) return;
+
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('titleInput').readOnly = true;
+            document.getElementById('result').textContent = '';
+
+            const randomIndex = Math.floor(Math.random() * foods.length);
+            const segmentAngle = 360 / foods.length;
+
+            // conic-gradient 从顶部(0度)开始，顺时针
+            // 指针在顶部，需要计算让目标扇区旋转到顶部
+            // 强制让目标角度精确在扇区中心位置，±3度范围，绝对不会碰到边缘
+            const safeOffset = (Math.random() * 6 - 3) + segmentAngle / 2; // 中心±3度随机偏移
+            const targetAngle = 360 - (randomIndex * segmentAngle + safeOffset);
+            const spins = 5 + Math.floor(Math.random() * 3); // 5-7圈
+            const totalRotation = spins * 360 + targetAngle;
+
+            currentRotation += totalRotation;
+
+            const wheel = document.getElementById('wheel');
+            wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+                document.getElementById('titleInput').readOnly = false;
+                // 双重保险：根据最终旋转角度重新计算结果，确保完全对应
+                const finalRotation = currentRotation % 360;
+                const actualIndex = Math.floor((360 - finalRotation) / segmentAngle) % foods.length;
+                const actionText = document.getElementById('titleInput').value.trim() || '吃';
+                document.getElementById('result').textContent = `🎉 今天${actionText}【${foods[actualIndex]}】！`;
+            }, 4000);
+        }
+
+        function updateWheel() {
+            if (isSpinning) { showToast('请等待转盘转完哦~'); return; }
+            const inputs = document.querySelectorAll('.option-input');
+            const count = parseInt(document.getElementById('segmentCount').value);
+            const lines = Array.from(inputs).map(input => input.value.trim());
+            const emptyCount = lines.filter(val => val === '').length;
+
+            if (emptyCount > 0) {
+                alert(`请填写全部 ${count} 个选项！（还有 ${emptyCount} 个未填写）`);
+                return;
+            }
+
+            foods = lines;
+            createWheel();
+            document.getElementById('result').textContent = '✅ 转盘已更新！';
+            // 自动收起面板
+            document.getElementById('editPanel').style.display = 'none';
+        }
+
+        // 初始化
+        updateInputFields();
+        updateWheel();
+
+        document.getElementById('spinBtn').addEventListener('click', spin);
+
+        // 移动端禁止双指缩放
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
