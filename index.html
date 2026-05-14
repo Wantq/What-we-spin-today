@@ -68,7 +68,7 @@
             border: 8px solid #fff;
             box-shadow: 0 0 20px rgba(0,0,0,0.3), inset 0 0 10px rgba(0,0,0,0.1);
             overflow: hidden;
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            /* transition 改用 JS requestAnimationFrame 驱动，避免浏览器走最短路径 */
             position: relative;
         }
 
@@ -529,22 +529,34 @@
             const spins = 5 + Math.floor(Math.random() * 3); // 5-7圈
             const totalRotation = spins * 360 + targetAngle;
 
-            currentRotation += totalRotation;
-
+            const startRotation = currentRotation;
+            const endRotation = currentRotation + totalRotation;
+            const duration = 4000;
+            const startTime = performance.now();
             const wheel = document.getElementById('wheel');
-            wheel.style.transform = `rotate(${currentRotation}deg)`;
 
-            setTimeout(() => {
-                isSpinning = false;
-                document.getElementById('spinBtn').disabled = false;
-                document.getElementById('titleInput').readOnly = false;
-                // 双重保险：根据最终旋转角度重新计算结果，确保完全对应
-                const finalRotation = currentRotation % 360;
-                const actualIndex = Math.floor((360 - finalRotation) / segmentAngle) % foods.length;
-                const actionText = document.getElementById('titleInput').value.trim() || '吃';
-                document.getElementById('result').textContent = `🎉 今天${actionText}【${foods[actualIndex]}】！`;
-                currentRotation = currentRotation % 360;
-            }, 4000);
+            function animate(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                currentRotation = startRotation + (endRotation - startRotation) * ease;
+                wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentRotation = endRotation;
+                    isSpinning = false;
+                    document.getElementById('spinBtn').disabled = false;
+                    document.getElementById('titleInput').readOnly = false;
+                    const finalRotation = currentRotation % 360;
+                    const actualIndex = Math.floor((360 - finalRotation) / segmentAngle) % foods.length;
+                    const actionText = document.getElementById('titleInput').value.trim() || '吃';
+                    document.getElementById('result').textContent = `🎉 今天${actionText}【${foods[actualIndex]}】！`;
+                    currentRotation = currentRotation % 360;
+                }
+            }
+            requestAnimationFrame(animate);
         }
 
         function updateWheel() {
